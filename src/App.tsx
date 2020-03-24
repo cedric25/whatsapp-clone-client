@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import ChatsList from './components/ChatsList'
 
 function App() {
@@ -7,7 +7,7 @@ function App() {
       <div>Whatsapp Clone</div>
       <ChatsList />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

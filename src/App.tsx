@@ -1,10 +1,11 @@
 import React from 'react'
+import ChatsNavbar from './components/ChatsNavbar'
 import ChatsList from './components/ChatsList'
 
 function App() {
   return (
     <div>
-      <div>Whatsapp Clone</div>
+      <ChatsNavbar />
       <ChatsList />
     </div>
   )

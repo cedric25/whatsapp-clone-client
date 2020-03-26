@@ -1,4 +1,4 @@
-jsxBracketSameLine: true
+jsxBracketSameLine: false
 semi: false
 singleQuote: true
 tabWidth: 2

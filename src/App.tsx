@@ -3,16 +3,16 @@ import {
   BrowserRouter,
   Route,
   Redirect,
-  Switch,
   RouteComponentProps,
 } from 'react-router-dom'
+import AnimatedSwitch from './components/AnimatedSwitch'
 import ChatRoomScreen from './components/ChatRoomScreen'
 import ChatsListScreen from './components/ChatsListScreen'
 
 function App() {
   return (
     <BrowserRouter>
-      <Switch>
+      <AnimatedSwitch>
         <Route exact path="/chats" component={ChatsListScreen} />
         <Route
           exact
@@ -21,7 +21,7 @@ function App() {
             <ChatRoomScreen chatId={match.params.chatId} />
           )}
         />
-      </Switch>
+      </AnimatedSwitch>
       <Route exact path="/" render={redirectToChats} />
     </BrowserRouter>
   )

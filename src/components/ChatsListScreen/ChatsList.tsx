@@ -1,29 +1,30 @@
-import React, { useState, useMemo } from 'react'
+import React, { useCallback, useState, useMemo } from 'react'
+import { History } from 'history'
 import moment from 'moment'
-import { List, ListItem } from '@material-ui/core';
-import styled from 'styled-components';
+import { List, ListItem } from '@material-ui/core'
+import styled from 'styled-components'
 
 const Container = styled.div`
   height: calc(100% - 56px);
   overflow-y: overlay;
-`;
+`
 
 const StyledList = styled(List)`
   padding: 0 !important;
-`;
+`
 
 const StyledListItem = styled(ListItem)`
   height: 76px;
   padding: 0 15px;
   display: flex;
-`;
+`
 
 const ChatPicture = styled.img`
   height: 50px;
   width: 50px;
   object-fit: cover;
   border-radius: 50%;
-`;
+`
 
 const ChatInfo = styled.div`
   width: calc(100% - 60px);
@@ -32,11 +33,11 @@ const ChatInfo = styled.div`
   margin-left: 10px;
   border-bottom: 0.5px solid silver;
   position: relative;
-`;
+`
 
 const ChatName = styled.div`
   margin-top: 5px;
-`;
+`
 
 const MessageContent = styled.div`
   color: gray;
@@ -45,7 +46,7 @@ const MessageContent = styled.div`
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-`;
+`
 
 const MessageDate = styled.div`
   position: absolute;
@@ -53,7 +54,7 @@ const MessageDate = styled.div`
   top: 20px;
   right: 0;
   font-size: 13px;
-`;
+`
 
 const getChatsQuery = `
   query GetChats {
@@ -68,9 +69,13 @@ const getChatsQuery = `
       }
     }
   }
-`;
+`
 
-const ChatsList = () => {
+interface ChatsListProps {
+  history: History
+}
+
+const ChatsList: React.FC<ChatsListProps> = ({ history }) => {
   const [chats, setChats] = useState<any[]>([])
 
   useMemo(async () => {
@@ -80,27 +85,37 @@ const ChatsList = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ query: getChatsQuery }),
-    });
+    })
     const {
       data: { chats },
-    } = await body.json();
-    setChats(chats);
-  }, []);
+    } = await body.json()
+    setChats(chats)
+  }, [])
+
+  const navToChat = useCallback(
+    (chat) => {
+      history.push(`chats/${chat.id}`)
+    },
+    [history]
+  )
 
   return (
     <Container>
       <StyledList>
-        {chats.map(chat => (
-          <StyledListItem key={chat.id} button>
+        {chats.map((chat) => (
+          <StyledListItem
+            key={chat.id}
+            data-testid="chat"
+            button
+            onClick={navToChat.bind(null, chat)}
+          >
             <ChatPicture
               data-testid="picture"
               src={chat.picture}
               alt="Profile"
             />
             <ChatInfo>
-              <ChatName data-testid="name">
-                {chat.name}
-              </ChatName>
+              <ChatName data-testid="name">{chat.name}</ChatName>
               <MessageContent data-testid="content">
                 {chat?.lastMessage?.content}
               </MessageContent>

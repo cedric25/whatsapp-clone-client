@@ -1,16 +1,11 @@
 import gql from 'graphql-tag'
+import * as fragments from '../fragments'
 
 export default gql`
   query GetChat($chatId: ID!) {
     chat(chatId: $chatId) {
-      id
-      name
-      picture
-      messages {
-        id
-        content
-        createdAt
-      }
+      ...Chat
     }
   }
+  ${fragments.chat}
 `

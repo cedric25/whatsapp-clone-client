@@ -1,6 +1,8 @@
-import React, { useMemo, useState, useCallback } from 'react'
+import React, { useCallback } from 'react'
 import styled from 'styled-components'
 import { History } from 'history'
+import { useApolloClient, useQuery } from '@apollo/react-hooks'
+import gql from 'graphql-tag'
 import ChatNavbar from './ChatNavbar'
 import MessageInput from './MessageInput'
 import MessagesList from './MessagesList'
@@ -12,7 +14,7 @@ const Container = styled.div`
   height: 100vh;
 `
 
-const getChatQuery = `
+const getChatQuery = gql`
   query GetChat($chatId: ID!) {
     chat(chatId: $chatId) {
       id
@@ -45,30 +47,17 @@ export interface ChatQueryResult {
   messages: Array<ChatQueryMessage>
 }
 
-type OptionalChatQueryResult = ChatQueryResult | null
-
 const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
   history,
   chatId,
 }) => {
-  const [chat, setChat] = useState<OptionalChatQueryResult>(null)
+  const { data } = useQuery<any>(getChatQuery, {
+    variables: { chatId },
+  })
 
-  useMemo(async () => {
-    const body = await fetch(`${process.env.REACT_APP_SERVER_URL}/graphql`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: getChatQuery,
-        variables: { chatId },
-      }),
-    })
-    const {
-      data: { chat },
-    } = await body.json()
-    setChat(chat)
-  }, [chatId])
+  const { chat = null } = data || {}
+
+  const client = useApolloClient()
 
   const onSendMessage = useCallback(
     (content: string) => {
@@ -78,14 +67,21 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
         id: (chat.messages.length + 10).toString(),
         createdAt: new Date(),
         content,
+        __typename: 'Chat',
       }
 
-      setChat({
-        ...chat,
-        messages: chat.messages.concat(message),
+      client.writeQuery({
+        query: getChatQuery,
+        variables: { chatId },
+        data: {
+          chat: {
+            ...chat,
+            messages: chat.messages.concat(message),
+          },
+        },
       })
     },
-    [chat]
+    [chat, chatId, client]
   )
 
   if (!chat) return null

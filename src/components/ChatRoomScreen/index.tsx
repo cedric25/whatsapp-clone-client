@@ -1,9 +1,13 @@
 import React, { useCallback } from 'react'
 import styled from 'styled-components'
 import { History } from 'history'
-import { useQuery, useMutation } from '@apollo/react-hooks'
 import { defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import gql from 'graphql-tag'
+import {
+  GetChatsQuery,
+  useGetChatQuery,
+  useAddMessageMutation,
+} from '../../graphql/types'
 import * as queries from '../../graphql/queries'
 import * as fragments from '../../graphql/fragments'
 
@@ -19,6 +23,7 @@ const Container = styled.div`
   height: 100vh;
 `
 
+// eslint-disable-next-line
 const getChatQuery = gql`
   query GetChat($chatId: ID!) {
     chat(chatId: $chatId) {
@@ -28,6 +33,7 @@ const getChatQuery = gql`
   ${fragments.fullChat}
 `
 
+// eslint-disable-next-line
 const addMessageMutation = gql`
   mutation AddMessage($chatId: ID!, $content: String!) {
     addMessage(chatId: $chatId, content: $content) {
@@ -42,21 +48,6 @@ interface ChatRoomScreenParams {
   history: History
 }
 
-export interface ChatQueryMessage {
-  id: string
-  content: string
-  createdAt: Date
-}
-
-export interface ChatQueryResult {
-  id: string
-  name: string
-  picture: string
-  messages: Array<ChatQueryMessage>
-}
-
-type OptionalChatQueryResult = ChatQueryResult | null
-
 interface ChatsResult {
   chats: any[]
 }
@@ -65,17 +56,21 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
   history,
   chatId,
 }) => {
-  const { data } = useQuery<any>(getChatQuery, {
+  const { data, loading } = useGetChatQuery({
     variables: { chatId },
   })
 
-  const [addMessage] = useMutation(addMessageMutation)
-
-  const { chat = null } = data || {}
+  const [addMessage] = useAddMessageMutation()
 
   const onSendMessage = useCallback(
     (content: string) => {
-      if (!chat) return null
+      if (data === undefined) {
+        return null
+      }
+      const chat = data.chat
+      if (chat === undefined) {
+        return null
+      }
 
       addMessage({
         variables: { chatId, content },
@@ -108,19 +103,13 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
               return
             }
 
-            if (
-              fullChat === null ||
-              fullChat.messages === null ||
-              data === null ||
-              data.addMessage === null ||
-              data.addMessage.id === null
-            ) {
+            if (fullChat === null || fullChat.messages === null) {
               return
             }
             if (
               fullChat.messages.some(
                 (currentMessage: any) =>
-                  currentMessage.id === data.addMessage.id
+                  data.addMessage && currentMessage.id === data.addMessage.id
               )
             ) {
               return
@@ -136,9 +125,9 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
               data: fullChat,
             })
 
-            let clientChatsData
+            let clientChatsData: GetChatsQuery | null
             try {
-              clientChatsData = client.readQuery<ChatsResult>({
+              clientChatsData = client.readQuery({
                 query: queries.chats,
               })
             } catch (e) {
@@ -168,9 +157,16 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
         },
       })
     },
-    [chat, chatId, addMessage]
+    [data, chatId, addMessage]
   )
 
+  if (data === undefined) {
+    return null
+  }
+  const chat = data.chat
+  const loadingChat = loading
+
+  if (loadingChat) return null
   if (!chat) return null
 
   return (

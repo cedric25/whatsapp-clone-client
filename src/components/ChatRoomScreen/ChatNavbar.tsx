@@ -18,14 +18,15 @@ const Container = styled(Toolbar)`
 const BackButton = styled(Button)`
   svg {
     color: var(--primary-text);
+    margin-right: 32px;
   }
 `
 
 const Picture = styled.img`
   height: 40px;
   width: 40px;
-  margin-top: 3px;
   margin-left: -22px;
+  margin-right: 8px;
   object-fit: cover;
   padding: 5px;
   border-radius: 50%;

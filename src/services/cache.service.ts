@@ -1,11 +1,8 @@
 import { DataProxy } from 'apollo-cache'
 import { defaultDataIdFromObject } from 'apollo-cache-inmemory'
-import { ApolloClient } from 'apollo-client'
 import * as fragments from '../graphql/fragments'
 import * as queries from '../graphql/queries'
 import { MessageFragment, useMessageAddedSubscription } from '../graphql/types'
-
-type Client = ApolloClient<any> | DataProxy
 
 export const useCacheService = () => {
   useMessageAddedSubscription({
@@ -17,8 +14,8 @@ export const useCacheService = () => {
   })
 }
 
-export const writeMessage = (client: Client, message: MessageFragment) => {
-  type FullChat = { [key: string]: any }
+export const writeMessage = (client: DataProxy, message: MessageFragment) => {
+  type SomeKeys = { [key: string]: any }
   let fullChat
 
   const chatIdFromStore = defaultDataIdFromObject(message.chat)
@@ -27,7 +24,7 @@ export const writeMessage = (client: Client, message: MessageFragment) => {
     return
   }
   try {
-    fullChat = client.readFragment<FullChat>({
+    fullChat = client.readFragment<SomeKeys>({
       id: chatIdFromStore,
       fragment: fragments.fullChat,
       fragmentName: 'FullChat',
@@ -53,23 +50,20 @@ export const writeMessage = (client: Client, message: MessageFragment) => {
 
   let data
   try {
-    data = client.readQuery({
+    data = client.readQuery<SomeKeys>({
       query: queries.chats,
     })
   } catch (e) {
     return
   }
 
-  if (!data || data === null) {
-    return null
-  }
-  if (!data.chats || data.chats === undefined) {
+  if (!data || !data.chats) {
     return null
   }
   const chats = data.chats
 
   const chatIndex = chats.findIndex((c: any) => {
-    if (message === null || message.chat === null) return -1
+    if (message == null || message.chat == null) return -1
     return c.id === message.chat.id
   })
   if (chatIndex === -1) return

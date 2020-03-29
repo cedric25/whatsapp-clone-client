@@ -8,8 +8,11 @@ import {
 import AnimatedSwitch from './components/AnimatedSwitch'
 import ChatRoomScreen from './components/ChatRoomScreen'
 import ChatsListScreen from './components/ChatsListScreen'
+import { useCacheService } from './services/cache.service'
 
 function App() {
+  useCacheService()
+
   return (
     <BrowserRouter>
       <AnimatedSwitch>

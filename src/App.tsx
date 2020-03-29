@@ -5,11 +5,13 @@ import {
   Redirect,
   RouteComponentProps,
 } from 'react-router-dom'
-import AuthScreen from './components/AuthScreen'
 import AnimatedSwitch from './components/AnimatedSwitch'
+import { withAuth } from './services/auth.service'
+
+import AuthScreen from './components/AuthScreen'
 import ChatRoomScreen from './components/ChatRoomScreen'
 import ChatsListScreen from './components/ChatsListScreen'
-import { withAuth } from './services/auth.service'
+import ChatCreationScreen from './components/ChatCreationScreen'
 
 function App() {
   return (
@@ -25,6 +27,11 @@ function App() {
               <ChatRoomScreen chatId={match.params.chatId} history={history} />
             )
           )}
+        />
+        <Route
+          exact
+          path="/new-chat"
+          component={withAuth(ChatCreationScreen)}
         />
       </AnimatedSwitch>
       <Route exact path="/" render={redirectToChats} />

@@ -2,6 +2,7 @@ import React, { useCallback } from 'react'
 import styled from 'styled-components'
 import { History } from 'history'
 import gql from 'graphql-tag'
+import { Redirect } from 'react-router-dom'
 import { useGetChatQuery, useAddMessageMutation } from '../../graphql/types'
 import * as fragments from '../../graphql/fragments'
 import { writeMessage } from '../../services/cache.service'
@@ -97,6 +98,11 @@ const ChatRoomScreen: React.FC<ChatRoomScreenParams> = ({
 
   if (loadingChat) return null
   if (!chat) return null
+
+  // Chat was probably removed from cache by the subscription handler
+  if (!chat) {
+    return <Redirect to="/chats" />
+  }
 
   return (
     <Container>

@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useCallback } from 'react'
+import gql from 'graphql-tag'
 import styled from 'styled-components'
+import { History } from 'history'
+import { useAddChatMutation } from '../../graphql/types'
+import * as fragments from '../../graphql/fragments'
 import UsersList from '../UsersList'
 import ChatCreationNavbar from './ChatCreationNavbar'
-import { History } from 'history'
 
 // eslint-disable-next-line
 const Container = styled.div`
@@ -15,15 +18,52 @@ const StyledUsersList = styled(UsersList)`
   height: calc(100% - 56px);
 `
 
+gql`
+  mutation AddChat($recipientId: ID!) {
+    addChat(recipientId: $recipientId) {
+      ...Chat
+    }
+  }
+  ${fragments.chat}
+`
+
 interface ChildComponentProps {
   history: History
 }
 
-const ChatCreationScreen: React.FC<ChildComponentProps> = ({ history }) => (
-  <div>
-    <ChatCreationNavbar history={history} />
-    <UsersList />
-  </div>
-)
+const ChatCreationScreen: React.FC<ChildComponentProps> = ({ history }) => {
+  const [addChat] = useAddChatMutation()
+
+  const onUserPick = useCallback(
+    (user) =>
+      addChat({
+        optimisticResponse: {
+          __typename: 'Mutation',
+          addChat: {
+            __typename: 'Chat',
+            id: Math.random().toString(36).substr(2, 9),
+            name: user.name,
+            picture: user.picture,
+            lastMessage: null,
+          },
+        },
+        variables: {
+          recipientId: user.id,
+        },
+      }).then((result) => {
+        if (result && result.data !== null) {
+          history.push(`/chats/${result.data!.addChat!.id}`)
+        }
+      }),
+    [addChat, history]
+  )
+
+  return (
+    <div>
+      <ChatCreationNavbar history={history} />
+      <UsersList onUserPick={onUserPick} />
+    </div>
+  )
+}
 
 export default ChatCreationScreen

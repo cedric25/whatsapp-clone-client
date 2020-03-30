@@ -1,6 +1,8 @@
 import React from 'react'
 import { History } from 'history'
 import styled from 'styled-components'
+
+// Components
 import ChatsNavbar from './ChatsNavbar'
 import ChatsList from './ChatsList'
 import AddChatButton from './AddChatButton'

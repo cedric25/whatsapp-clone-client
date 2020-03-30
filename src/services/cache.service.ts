@@ -2,7 +2,12 @@ import { DataProxy } from 'apollo-cache'
 import { defaultDataIdFromObject } from 'apollo-cache-inmemory'
 import * as fragments from '../graphql/fragments'
 import * as queries from '../graphql/queries'
-import { MessageFragment, useMessageAddedSubscription } from '../graphql/types'
+import {
+  MessageFragment,
+  ChatFragment,
+  useMessageAddedSubscription,
+  useChatAddedSubscription,
+} from '../graphql/types'
 
 export const useCacheService = () => {
   useMessageAddedSubscription({
@@ -12,10 +17,19 @@ export const useCacheService = () => {
       }
     },
   })
+
+  useChatAddedSubscription({
+    onSubscriptionData: ({ client, subscriptionData: { data } }) => {
+      if (data) {
+        writeChat(client, data.chatAdded)
+      }
+    },
+  })
 }
 
+type SomeKeys = { [key: string]: any }
+
 export const writeMessage = (client: DataProxy, message: MessageFragment) => {
-  type SomeKeys = { [key: string]: any }
   let fullChat
 
   const chatIdFromStore = defaultDataIdFromObject(message.chat)
@@ -76,5 +90,42 @@ export const writeMessage = (client: DataProxy, message: MessageFragment) => {
   client.writeQuery({
     query: queries.chats,
     data: { chats: chats },
+  })
+}
+
+export const writeChat = (client: DataProxy, chat: ChatFragment) => {
+  const chatId = defaultDataIdFromObject(chat)
+  if (chatId === null) {
+    return
+  }
+
+  client.writeFragment({
+    id: chatId,
+    fragment: fragments.chat,
+    fragmentName: 'Chat',
+    data: chat,
+  })
+
+  let data
+  try {
+    data = client.readQuery<SomeKeys>({
+      query: queries.chats,
+    })
+  } catch (e) {
+    return
+  }
+
+  if (!data) return
+
+  const chats = data.chats
+
+  if (!chats) return
+  if (chats.some((c: any) => c.id === chat.id)) return
+
+  chats.unshift(chat)
+
+  client.writeQuery({
+    query: queries.chats,
+    data: { chats },
   })
 }

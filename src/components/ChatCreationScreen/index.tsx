@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { History } from 'history'
 import { useAddChatMutation } from '../../graphql/types'
 import * as fragments from '../../graphql/fragments'
+import { writeChat } from '../../services/cache.service'
 import UsersList from '../UsersList'
 import ChatCreationNavbar from './ChatCreationNavbar'
 
@@ -49,6 +50,11 @@ const ChatCreationScreen: React.FC<ChildComponentProps> = ({ history }) => {
         },
         variables: {
           recipientId: user.id,
+        },
+        update: (client, { data }) => {
+          if (data && data.addChat) {
+            writeChat(client, data.addChat)
+          }
         },
       }).then((result) => {
         if (result && result.data !== null) {
